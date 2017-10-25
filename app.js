@@ -8,11 +8,8 @@ app.get('/', function (req, res) {
         //console.log("Got response: " + result.statusCode);
         //console.log('HEADERS: ' + JSON.stringify(result.headers));
         result.setEncoding('utf8');
-        let rawData = '';
-        result.on('data', (chunk) => { 
-            rawData += chunk; 
-        });
-        result.on('end', () => {
+
+        getData(result, (rawData) => {
             var re = new RegExp('Permanent link to this comic: https://xkcd.com/(\\d+)/');
             var num = re.exec(rawData);
             var rand = Math.floor((Math.random() * num[1]) + 1);
@@ -24,15 +21,10 @@ app.get('/', function (req, res) {
                 result2.setEncoding('utf8');
                 console.log("Got response: " + result2.statusCode);
 
-                let myData = '';
-                result2.on('data', (chunk2) => { 
-                    //console.log(chunk2);
-                    myData += chunk2; 
-                });
-                result2.on('end', () => {
+                getData(result2, (allData) => {
                     //console.log(myData);
                     var reg = new RegExp('(https://imgs.xkcd.com/comics/.*.png)', 'i');
-                    var imgSrc = reg.exec(myData);
+                    var imgSrc = reg.exec(allData);
                     console.log("img src = " + imgSrc[1]);
                     var html = "<img src=\"" + imgSrc[1] + "\">";
                     res.send(html);
@@ -45,6 +37,16 @@ app.get('/', function (req, res) {
     });
     
 });
+
+function getData (result, callback) {
+    let myData = '';
+    result.on('data', (chunk) => { 
+        //console.log(chunk);
+        myData += chunk; 
+    });
+
+    result.on('end', () => { callback(myData)});
+}
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
